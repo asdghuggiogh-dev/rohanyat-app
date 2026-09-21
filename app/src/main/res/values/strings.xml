@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">روحانيات</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome">مرحبًا بك في روحانيات</string>
+    <string name="onboarding_tagline">قرآن · تلاوات · أذكار · أدعية · محتوى روحاني</string>
+    <string name="onboarding_signup">إنشاء حساب</string>
+    <string name="onboarding_guest">تصفح كزائر</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_browse">تصفح</string>
+    <string name="nav_create">إنشاء</string>
+    <string name="nav_shorts">Shorts</string>
+    <string name="nav_profile">حسابي</string>
+
+    <!-- Home -->
+    <string name="home_ayah_of_day">آية اليوم</string>
+    <string name="home_adhkar_today">أذكار اليوم</string>
+    <string name="home_continue">آخر ما تم تشغيله</string>
+    <string name="home_quran">القرآن الكريم</string>
+    <string name="home_reciters">القرّاء</string>
+    <string name="home_duas">الأدعية</string>
+    <string name="home_suggested">مقترح لك</string>
+    <string name="see_all">عرض الكل</string>
+
+    <!-- Quran -->
+    <string name="quran_title">القرآن الكريم</string>
+    <string name="quran_search_hint">ابحث عن سورة أو آية…</string>
+    <string name="filter_all">الكل</string>
+    <string name="filter_meccan">مكية</string>
+    <string name="filter_medinan">مدنية</string>
+    <string name="filter_favorites">المفضلة</string>
+
+    <!-- Video player -->
+    <string name="related_videos">فيديوهات مشابهة</string>
+    <string name="action_like">إعجاب</string>
+    <string name="action_share">مشاركة</string>
+    <string name="action_save">حفظ</string>
+
+    <!-- Create -->
+    <string name="create_title">إنشاء محتوى</string>
+    <string name="upload_prompt">رفع فيديو أو Short</string>
+    <string name="upload_hint">اختر من ألبوماتك أو مقاطع الفيديو المحفوظة في جهازك</string>
+    <string name="content_type_video">فيديو عادي</string>
+    <string name="content_type_short">Short</string>
+    <string name="field_title">العنوان</string>
+    <string name="field_description">الوصف</string>
+    <string name="field_hashtags">الوسوم (Hashtags)</string>
+    <string name="publish">نشر</string>
+    <string name="save_draft">حفظ كمسودة</string>
+
+    <!-- Profile -->
+    <string name="edit_channel">تعديل القناة</string>
+    <string name="analytics">الإحصاءات</string>
+    <string name="tab_videos">الفيديوهات</string>
+    <string name="tab_shorts">Shorts</string>
+    <string name="tab_reposts">إعادة النشر</string>
+    <string name="tab_likes">الإعجابات</string>
+    <string name="tab_saved">المحفوظات</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="dark_mode">الوضع الداكن</string>
+    <string name="logout">تسجيل الخروج</string>
+</resources>
