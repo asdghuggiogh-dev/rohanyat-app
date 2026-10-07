@@ -1,0 +1,318 @@
+package com.example.ui.screens
+
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.data.model.Ayah
+import com.example.data.repository.IslamicDataRepository
+import com.example.ui.theme.EmeraldPrimary
+import com.example.ui.theme.GoldSecondary
+import kotlinx.coroutines.launch
+
+enum class QuranTranquilTheme(
+    val title: String,
+    val backgroundColor: Color,
+    val cardColor: Color,
+    val textColor: Color,
+    val accentColor: Color
+) {
+    WARM_PARCHMENT("ورقي دافئ", Color(0xFFFBF8F1), Color(0xFFF4ECE1), Color(0xFF221A0F), Color(0xFF996515)),
+    MIDNIGHT_DARK("ليلي هادئ", Color(0xFF081412), Color(0xFF0E221E), Color(0xFFE2EFEA), Color(0xFF10B981)),
+    EMERALD_MINT("أخضر روحاني", Color(0xFF031E18), Color(0xFF062C24), Color(0xFFF4FAF7), Color(0xFFD4AF37))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SurahReaderScreen(
+    surahId: Int,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val surah = IslamicDataRepository.surahsList.find { it.id == surahId } ?: IslamicDataRepository.surahsList.first()
+    var selectedAyahForDialog by remember { mutableStateOf<Ayah?>(null) }
+    val listState = rememberLazyListState()
+
+    // حالات الوضع الهادئ والخط العثماني وحجم النص
+    var isTranquilMode by remember { mutableStateOf(false) }
+    var textSizeSp by remember { mutableFloatStateOf(24f) }
+    var tranquilTheme by remember { mutableStateOf(QuranTranquilTheme.WARM_PARCHMENT) }
+    var showFontControls by remember { mutableStateOf(false) }
+
+    val currentBgColor = if (isTranquilMode) tranquilTheme.backgroundColor else MaterialTheme.colorScheme.background
+
+    Scaffold(
+        containerColor = currentBgColor,
+        topBar = {
+            if (isTranquilMode) {
+                // شريط علوي مبسط وخالٍ من المشتتات
+                Surface(color = tranquilTheme.backgroundColor.copy(alpha = 0.95f), modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { isTranquilMode = false }) {
+                                Icon(Icons.Default.Close, contentDescription = "خروج", tint = tranquilTheme.textColor)
+                            }
+                            Text(
+                                text = "سورة ${surah.nameArabic} • الوضع الهادئ",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = tranquilTheme.textColor)
+                            )
+                        }
+                        IconButton(onClick = { showFontControls = !showFontControls }) {
+                            Icon(Icons.Default.FormatSize, contentDescription = "الخط", tint = tranquilTheme.accentColor)
+                        }
+                    }
+                }
+            } else {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text("سورة ${surah.nameArabic}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text("${surah.revelationType} • ${surah.versesCount} آية", style = MaterialTheme.typography.labelSmall)
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "رجوع") }
+                    },
+                    actions = {
+                        FilledTonalButton(
+                            onClick = { isTranquilMode = true },
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("الوضع الهادئ", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                )
+            }
+        },
+        bottomBar = {
+            AnimatedVisibility(visible = isTranquilMode && showFontControls) {
+                Surface(
+                    color = tranquilTheme.cardColor,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    tonalElevation = 8.dp
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(18.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("حجم الخط العثماني: ${textSizeSp.toInt()} sp", style = MaterialTheme.typography.bodyMedium.copy(color = tranquilTheme.textColor))
+                            Row {
+                                OutlinedIconButton(onClick = { if (textSizeSp > 18f) textSizeSp -= 2f }, shape = CircleShape) { Text("A-") }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                OutlinedIconButton(onClick = { if (textSizeSp < 40f) textSizeSp += 2f }, shape = CircleShape) { Text("A+") }
+                            }
+                        }
+                        Slider(value = textSizeSp, onValueChange = { textSizeSp = it }, valueRange = 18f..40f)
+                    }
+                }
+            }
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isTranquilMode) 8.dp else 16.dp)
+        ) {
+            item {
+                Text(
+                    text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = if (isTranquilMode) tranquilTheme.textColor else EmeraldPrimary,
+                        fontFamily = FontFamily.Serif
+                    ),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+                )
+            }
+            items(surah.sampleAyahs) { ayah ->
+                AyahItemCard(
+                    ayah = ayah,
+                    isTranquilMode = isTranquilMode,
+                    textSizeSp = textSizeSp,
+                    tranquilTheme = tranquilTheme,
+                    onClick = { selectedAyahForDialog = ayah }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AyahItemCard(
+    ayah: Ayah,
+    isTranquilMode: Boolean,
+    textSizeSp: Float,
+    tranquilTheme: QuranTranquilTheme,
+    onClick: () -> Unit
+) {
+    if (isTranquilMode) {
+        Surface(modifier = Modifier.fillMaxWidth().clickable { onClick() }, color = Color.Transparent) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                Text(
+                    text = "${ayah.textArabic}  \u06DD${ayah.number}\u06DE",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontFamily = FontFamily.Serif,
+                        fontSize = textSizeSp.sp,
+                        lineHeight = (textSizeSp * 1.85f).sp,
+                        color = tranquilTheme.textColor
+                    ),
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (ayah.tafseer.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "التفسير: ${ayah.tafseer}",
+                        style = MaterialTheme.typography.bodySmall.copy(color = tranquilTheme.textColor.copy(alpha = 0.7f), fontSize = 12.sp)
+                    )
+                }
+            }
+        }
+    } else {
+        Card(modifier = Modifier.fillMaxWidth().clickable { onClick() }, shape = RoundedCornerShape(16.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
+                Text(
+                    text = "${ayah.textArabic} ﴿${ayah.number}﴾",
+                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Serif, lineHeight = 34.sp),
+                    textAlign = TextAlign.Right,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MyApplication">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MyApplication">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>package com.example
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import com.example.data.repository.IslamicDataRepository
+import com.example.ui.screens.SurahReaderScreen
+import com.example.ui.theme.RowhaniyatTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        IslamicDataRepository.init(this)
+
+        setContent {
+            RowhaniyatTheme {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    var currentSurahId by remember { mutableIntStateOf(1) }
+                    SurahReaderScreen(
+                        surahId = currentSurahId,
+                        onBack = { finish() }
+                    )
+                }
+            }
+        }
+    }
+}plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+}
+
+android {
+    namespace = "com.example"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.aistudio.rowhaniyat.qurnv"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 4
+        versionName = "2.2"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+
+dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.coil.compose)
+}
